@@ -44,8 +44,13 @@ void infocheck()
         {
         if(info=="pick")
         {
+          for(int i=0;i<30;i++)
+          {
           sserial.listen();
-          sserial.println("#0 P");
+          sserial.println("#0 P500 #1 P500 #2 P500 T500");
+          Serial.println("#0 P1000 #1 P1000");
+          delay(1000);
+          }
           sserial.end();
           info="";
         }
@@ -53,6 +58,7 @@ void infocheck()
         {
           sserial.listen();
           sserial.println("put");
+          Serial.println("put");
           sserial.end();
           info="";
         }
@@ -107,5 +113,15 @@ void loop()
       info+=char(Serial.read());
       delay(2);
     }
-    infocheck();
+     if(info.length()!=0)
+     {
+      for(int i=0;i<30;i++)
+          {
+          sserial.listen();
+          sserial.println(info);
+          Serial.println(info);
+          }
+          sserial.end();
+          info="";
+     }
 }
