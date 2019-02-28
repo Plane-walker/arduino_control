@@ -10,6 +10,7 @@ int track[3]={16,17,18};
 int EN[2]={5,6};
 float P,I,D,error,previous_error=0;
 bool autoc=false;
+int Lspeed=128,Rspeed=128;
 
 float Kp=10,Ki=0.5,Kd=0;
 
@@ -55,9 +56,37 @@ float calc_pid()
   return PID_value;
 }
 
+void errorupdate()
+{
+  int trackn[3]={};
+  for(int i=0;i<3;i++)
+    trackn[i]=digitalRead(track[i]);
+    if(trackn[0]==0&&trackn[1]==1&&trackn[2]==0)
+    error=0;
+    else if(trackn[0]==1&&trackn[1]==0&&trackn[2]==0)
+    error=-1;
+    else if(trackn[0]==0&&trackn[1]==0&&trackn[2]==1)
+    error=1;
+}
 void automode()
 {
-  calc_pid();
+  errorupdate();
+  int fixnum=calc_pid();
+  Lspeed+=(int)fixnum;
+  Rspeed-=(int)fixnum;
+  if(Lspeed<0)
+  Lspeed=0;
+  if(Rspeed<0)
+  Rspeed=0;
+  if(Lspeed>255)
+  Lspeed=255;
+  if(Rspeed>255)
+  Rspeed=255;
+  #ifdef DEBUG
+  Serial.println(Lspeed);
+  Serial.println(Rspeed);
+  #endif
+  speedset(Lspeed,Rspeed);
 }
 
 /*
@@ -73,7 +102,7 @@ void automode()
  * 08------goBR
  * 09------turnL
  * 10------turnR
- * 11------null
+ * 11------speedchange
  * 12------null
  * 13------null
  * 14------null
@@ -121,7 +150,9 @@ void infocheck(String info)
 
 //----------------------------------------------------------------
 //armcontrol
-        if(order=="21")
+        switch(order.toInt())
+        {
+          case 21:
         {
           for(int i=0;i<10;i++)
           {
@@ -134,7 +165,8 @@ void infocheck(String info)
           }
           sserial.end();
         }
-        else if(order=="22")
+        break;
+        case 22:
         {
           for(int i=0;i<10;i++)
           {
@@ -147,11 +179,12 @@ void infocheck(String info)
           }
           sserial.end();
         }
+        break;
 //----------------------------------------------------------------
 
 //----------------------------------------------------------------
 //wheelcontrol
-        else if(order=="01")
+        case 1:
         {
           for(int i=0;i<4;i++)
           {
@@ -161,7 +194,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="02")
+        break;
+        case 2:
         {
           for(int i=0;i<4;i++)
           {
@@ -171,7 +205,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="03")
+        break;
+        case 3:
         {
           for(int i=0;i<4;i++)
           {
@@ -181,7 +216,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="04")
+        break;
+        case 4:
         {
           for(int i=0;i<4;i++)
           {
@@ -191,7 +227,8 @@ void infocheck(String info)
          speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="05")
+        break;
+        case 5:
         {
           for(int i=0;i<4;i++)
           {
@@ -201,7 +238,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="06")
+        break;
+        case 6:
         {
           for(int i=0;i<4;i++)
           {
@@ -211,7 +249,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="08")
+        break;
+        case 8:
         {
           for(int i=0;i<4;i++)
           {
@@ -221,7 +260,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="07")
+        break;
+        case 7:
         {
           for(int i=0;i<4;i++)
           {
@@ -231,7 +271,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="00")
+        break;
+        case 0:
         {
           for(int i=0;i<4;i++)
           {
@@ -241,7 +282,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="10")
+        break;
+        case 10:
         {
           for(int i=0;i<4;i++)
           {
@@ -251,7 +293,8 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
-        else if(order=="09")
+        break;
+        case 9:
         {
           for(int i=0;i<4;i++)
           {
@@ -261,11 +304,14 @@ void infocheck(String info)
           speedset(lspeed,rspeed);
           dirc(wn);
         }
+        break;
+        case 11:
+        {
+          speedset(lspeed,rspeed);
+        }
+        break;
+        }
 //----------------------------------------------------------------
-      }
-      if(autoc)
-      {
-        automode(); 
       }
 }
 
@@ -293,7 +339,7 @@ void loop()
     }
     if(!Serial.available()&&info.length()>1)
     infocheck(info);
-    if(info.length()!=0)
-    Serial.println(info);
     info="";
+    if(autoc)
+    automode();
 }
