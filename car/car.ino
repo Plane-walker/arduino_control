@@ -11,6 +11,7 @@ int EN[2]={5,6};
 float P,I,D,error,previous_error=0;
 bool autoc=false;
 int Lspeed=128,Rspeed=128;
+int degree[3]={1400,2200,2200};
 
 float Kp=10,Ki=0.5,Kd=0;
 
@@ -61,11 +62,11 @@ void errorupdate()
   int trackn[3]={};
   for(int i=0;i<3;i++)
     trackn[i]=digitalRead(track[i]);
-    if(trackn[0]==0&&trackn[1]==1&&trackn[2]==0)
+    if(trackn[0]==1&&trackn[1]==0&&trackn[2]==1)
     error=0;
-    else if(trackn[0]==1&&trackn[1]==0&&trackn[2]==0)
+    else if(trackn[0]==0&&trackn[1]==1&&trackn[2]==1)
     error=-1;
-    else if(trackn[0]==0&&trackn[1]==0&&trackn[2]==1)
+    else if(trackn[0]==1&&trackn[1]==1&&trackn[2]==0)
     error=1;
 }
 void automode()
@@ -115,8 +116,10 @@ void automode()
  * 21------pick
  * 22------put
  * 23------auto
- * 24------null
- * 25------null
+ * 24------pullahead
+ * 25------pullback
+ * 26------null
+ * 27------null
 */
 
 void infocheck(String info)
@@ -135,6 +138,30 @@ void infocheck(String info)
           for(int i=5;i<8;i++)
           temp+=info[i];
           rspeed=temp.toInt();
+  }
+  if(order.toInt()==24)
+  {
+    String temp="";
+    for(int i=2;i<5;i++)
+    temp+=info[i];
+    degree[1]-=temp.toInt();  
+    degree[2]-=temp.toInt();
+    if(degree[1]<1200)
+    degree[1]=1200;  
+    if(degree[2]<1200)
+    degree[2]=1200;  
+  }
+  if(order.toInt()==25)
+  {
+    String temp="";
+    for(int i=2;i<5;i++)
+    temp+=info[i];
+    degree[1]+=temp.toInt();  
+    degree[2]+=temp.toInt();  
+    if(degree[1]>2200)
+    degree[1]=2200;  
+    if(degree[2]>2200)
+    degree[2]=2200;
   }
   #ifdef DEBUG
   Serial.println(order);
@@ -157,7 +184,7 @@ void infocheck(String info)
           for(int i=0;i<10;i++)
           {
           sserial.listen();
-          sserial.println("#0 P500 #1 P500 #2 P500 T500");
+          sserial.println("#0 P1500 T500");
           #ifdef DEBUG
           if(i==0)
           Serial.println("pick");
@@ -171,10 +198,54 @@ void infocheck(String info)
           for(int i=0;i<10;i++)
           {
           sserial.listen();
-          sserial.println("#0 P500 #1 P500 #2 P500 T500");
+          sserial.println("#0 P900 T500");
           #ifdef DEBUG
           if(i==0)
           Serial.println("put");
+          #endif
+          }
+          sserial.end();
+        }
+        break;
+        case 24:
+        {
+          String aorder="#1 p";
+          aorder.concat(degree[1]);
+          aorder+=" T";
+          aorder.concat(degree[2]);
+          aorder+=" #2 p";
+          aorder.concat(degree[1]);
+          aorder+=" T";
+          aorder.concat(degree[2]);
+          for(int i=0;i<10;i++)
+          {
+          sserial.listen();
+          sserial.println(aorder);
+          #ifdef DEBUG
+          if(i==0)
+          Serial.println(aorder);
+          #endif
+          }
+          sserial.end();
+        }
+        break;
+        case 25:
+        {
+          String aorder="#1 p";
+          aorder.concat(degree[1]);
+          aorder+=" T";
+          aorder.concat(degree[2]);
+          aorder+=" #2 p";
+          aorder.concat(degree[1]);
+          aorder+=" T";
+          aorder.concat(degree[2]);
+          for(int i=0;i<10;i++)
+          {
+          sserial.listen();
+          sserial.println(aorder);
+          #ifdef DEBUG
+          if(i==0)
+          Serial.println(aorder);
           #endif
           }
           sserial.end();
