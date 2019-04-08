@@ -6,9 +6,9 @@
 
 #define RELEASE
 
-servoct servos(1400,1000,1500,2200,2200);
+servoct servos(1400,1000,1800,2100,2500);
 motorct motors(0.6);
-pathfind track[3]={pathfind(16),pathfind(17),pathfind(18)};
+pathfind track[3]={pathfind(8),pathfind(7),pathfind(18)};
 ultrasonic ultr(4,19);//echo,t
 automode atmode;
 String info="";
@@ -53,7 +53,8 @@ void infocheck(String info)
   order+=info[0];
   order+=info[1];
   int lspeed,rspeed;
-  int aimh;
+  int aimh,distance;
+  int spec;
   if(order.toInt()<21)
   {
     String temp="";
@@ -65,6 +66,11 @@ void infocheck(String info)
           temp+=info[i];
           rspeed=temp.toInt();
           motors.writespeed(lspeed,rspeed);
+          if(order.toInt()<9&&order.toInt()>2)
+          {
+            temp=info[8];
+            spec=temp.toInt();
+          }
           if(order=="11")
           return;
   }
@@ -72,6 +78,10 @@ void infocheck(String info)
   {
     String temp="";
     for(int i=2;i<4;i++)
+    temp+=info[i];
+    distance=temp.toInt();
+    temp="";
+    for(int i=4;i<6;i++)
     temp+=info[i];
     aimh=temp.toInt();
   }
@@ -98,7 +108,7 @@ void infocheck(String info)
         break;
         case 24:
         {
-          servos.pushahead(ultr,aimh);
+          servos.pushahead(ultr,distance,aimh);
         }
         break;
         case 25:
@@ -122,32 +132,32 @@ void infocheck(String info)
         break;
         case 3:
         {
-          motors.goleft();
+          motors.goleft(spec);
         }
         break;
         case 4:
         {
-          motors.goright();
+          motors.goright(spec);
         }
         break;
         case 5:
         {
-          motors.goAR();
+          motors.goAR(spec);
         }
         break;
         case 6:
         {
-          motors.goAL();
+          motors.goAL(spec);
         }
         break;
         case 8:
         {
-          motors.goBR();
+          motors.goBR(spec);
         }
         break;
         case 7:
         {
-          motors.goBL();
+          motors.goBL(spec);
         }
         break;
         case 0:
@@ -197,7 +207,7 @@ void loop()
     if(atmode.ab())
     {
       if(!atmode.autop())
-      atmode.autowork(track,motors);
+      atmode.autowork_s(track,motors);
       else
       atmode.auto_pick(ultr,servos);
     }

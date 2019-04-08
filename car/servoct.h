@@ -9,7 +9,7 @@ class servoct
   int *pos;
   int *originpos;
   int *posc;
-  double handl,frontl,r1,r2,carh;
+  double handl,r1,r2,carh;
   double dispath,aimh;
   double *orde;
   double calcde(double a,double b,double c)
@@ -18,16 +18,26 @@ class servoct
   }
   void setde()
   {
-    double subline=pow(dispath*dispath+(carh-aimh)*(carh-aimh),0.5);
-    double de2=calcde(subline,r1,r2)*3.14159/180;
-    double de3=270-(calcde(r1,subline,r2)-calcde(dispath,subline,carh-aimh));
-    double de1=calcde(r2,subline,r1)+calcde(carh-aimh,subline,dispath)+90;
-    posc[2]=(-de1+orde[0])/180*2000;
+    double subline=pow(dispath*dispath+(carh-aimh-handl)*(carh-aimh-handl),0.5);
+    double de2=calcde(subline,r1,r2);
+    double de3=180-(calcde(r1,subline,r2)+calcde(abs(carh-aimh-handl),dispath,subline));
+    double de1=calcde(r2,subline,r1)+calcde(dispath,abs(carh-aimh-handl),subline);
+    posc[2]=(int)((de1-orde[0])/180*2000);
+    orde[0]=de1;
     changepos(2);
-    posc[3]=(-de2+orde[1])/180*2000;
+    posc[3]=(int)((-de2+orde[1])/180*2000);
+    orde[1]=de2;
     changepos(3);
-    posc[4]=(de3-orde[2])/180*2000;
+    posc[4]=(int)((-de3+orde[2])/180*2000);
+    orde[2]=de3;
     changepos(4);
+    String out="";
+    out.concat(de1);
+    out+=" ";
+    out.concat(de2);
+    out+=" ";
+    out.concat(de3);
+    Serial.println(out);
   }
   void changepos(int i)
   {
@@ -58,7 +68,6 @@ class servoct
       posc[i]=0;
     }
     sserial->listen();
-    //for(int i=0;i<10;i++)
     sserial->println(order);
     delay(2);
     sserial->end();
@@ -68,26 +77,16 @@ class servoct
   {
     sserial=new SoftwareSerial(2,3);//RX,TX
     sserial->begin(115200);
-    handl=11.408;
-    frontl=18.978;
-    r1=15.145;
-    r2=12.850;
-    carh=14;
+    handl=9.890;
+    r1=14.640;
+    r2=10.260;
+    carh=17.060;
     dispath=9;
     aimh=10;
-    orde=new double[3]{95.98,62.11,62.11};
+    orde=new double[3]{123.1,65.1,29.6};
     originpos=new int[5]{o0,o1,o2,o3,o4};
     pos=new int[5]{o0,o1,o2,o3,o4};
     posc=new int[5]{0,0,0,0,0};
-    String order="";
-    for(int i=0;i<5;i++)
-    {
-        order+="#";
-        order.concat(i);
-        order+=" P";
-        order.concat(originpos[i]);
-        order+=" ";
-    }
   }
   ~servoct()
   {
@@ -108,10 +107,13 @@ class servoct
     pos[0]=900;
     writepos();
   }
-  void pushahead(ultrasonic &ultr,double ah=10)
+  void pushahead(ultrasonic &ultr,double distance,double ah)
   {
     aimh=ah;
-    dispath=ultr.detective()+10;
+    if(distance<1)
+    dispath=ultr.detective()+10.980;
+    else
+    dispath=distance+10.980;
     setde();
     writepos();
   }
@@ -122,6 +124,9 @@ class servoct
       posc[i]=originpos[i]-pos[i];
       pos[i]=originpos[i];
     }
+    orde[0]=123.1;
+    orde[1]=65.1;
+    orde[2]=29.6;
     writepos();
   }
 };

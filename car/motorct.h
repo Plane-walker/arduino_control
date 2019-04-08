@@ -1,6 +1,5 @@
 #ifndef MOTORCT_H_INCLUDE
 #define MOTORCT_H_INCLUDE
-#define USEN
 class motorct
 {
   private:
@@ -20,7 +19,7 @@ class motorct
     pinMode(EN[0],OUTPUT);
     pinMode(EN[1],OUTPUT);
   }
-  void dirc(int (*wn)[2])
+  void dirc()
   {
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
@@ -36,7 +35,7 @@ class motorct
   motorct(double dek=0.6):dek(dek)
   {
     wheel=new int[4][2];
-    int temp1[4][2]={7,8,9,10,11,12,14,15};
+    int temp1[4][2]={14,15,12,11,16,17,10,9};
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
     wheel[i][j]=temp1[i][j];
@@ -44,7 +43,7 @@ class motorct
     int temp2[4][2]={0,0,0,0,0,0,0,0};
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
-    wheel[i][j]=temp2[i][j];
+    wn[i][j]=temp2[i][j];
     EN=new int[2]{5,6};
     clocked=false;
     lspeed=128;
@@ -67,7 +66,7 @@ class motorct
          wn[i][0]=1;
          wn[i][1]=!wn[i][0];
        }
-       dirc(wn);
+       dirc();
   }
   void goback()
   {
@@ -76,109 +75,121 @@ class motorct
          wn[i][0]=0;
          wn[i][1]=!wn[i][0];
        }
-       dirc(wn);
+       dirc();
   }
-  void goleft()
+  void goleft(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/2;
-    timecost(sde);
-    turnL();
-    #endif
-    #ifdef USEM
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=(i==1||i==2);
-    wn[i][1]=!wn[i][0];
+      clocked=true;
+      double sde=3.14/2;
+      timecost(sde);
+      turnL();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=(i==1||i==2);
+      wn[i][1]=!wn[i][0];
+      }
+      dirc();
+    }
   }
-  void goright()
+  void goright(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/2;
-    timecost(sde);
-    turnR();
-    #endif
-    #ifdef USEN
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=(i==0||i==3);
-    wn[i][1]=!wn[i][0];
+      clocked=true;
+      double sde=3.14/2;
+      timecost(sde);
+      turnR();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=(i==0||i==3);
+      wn[i][1]=!wn[i][0];
+      }
+      dirc();
+    }
   }
-  void goAL()
+  void goAL(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/4;
-    timecost(sde);
-    turnL();
-    #endif
-    #ifdef USEM
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=(i==1||i==2);
-    wn[i][1]=0;
+      clocked=true;
+      double sde=3.14/4;
+      timecost(sde);
+      turnL();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=(i==1||i==2);
+      wn[i][1]=0;
+      }
+      dirc();
+    }
   }
-  void goAR()
+  void goAR(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/4;
-    timecost(sde);
-    turnR();
-    #endif
-    #ifdef USEM
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=(i==0||i==3);
-    wn[i][1]=0;
+      clocked=true;
+      double sde=3.14/4;
+      timecost(sde);
+      turnR();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=(i==0||i==3);
+      wn[i][1]=0;
+      }
+      dirc();
+    }
   }
-  void goBL()
+  void goBL(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/4*3;
-    timecost(sde);
-    turnL();
-    #endif
-    #ifdef USEM
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=0;
-    wn[i][1]=(i==0||i==3);
+      clocked=true;
+      double sde=3.14/4*3;
+      timecost(sde);
+      turnL();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=0;
+      wn[i][1]=(i==0||i==3);
+      }
+      dirc();
+    }
   }
-  void goBR()
+  void goBR(int spec)
   {
-    #ifdef USEN
-    clocked=true;
-    double sde=3.14/4*3;
-    timecost(sde);
-    turnR();
-    #endif
-    #ifdef USEM
-    for(int i=0;i<4;i++)
+    if(spec==0)
     {
-    wn[i][0]=0;
-    wn[i][1]=(i==1||i==2);
+      clocked=true;
+      double sde=3.14/4*3;
+      timecost(sde);
+      turnR();
     }
-    dirc(wn);
-    #endif
+    else
+    {
+      for(int i=0;i<4;i++)
+      {
+      wn[i][0]=0;
+      wn[i][1]=(i==1||i==2);
+      }
+      dirc();
+    }
   }
   void turnL()
   {
@@ -187,7 +198,7 @@ class motorct
        wn[i][0]=(i%2!=0);
        wn[i][1]=(i%2==0);
     }
-    dirc(wn);
+    dirc();
   }
   void turnR()
   {
@@ -196,7 +207,7 @@ class motorct
        wn[i][0]=(i%2==0);
        wn[i][1]=(i%2!=0);
     }
-    dirc(wn);
+    dirc();
   }
   void hardstop()
   {
@@ -205,7 +216,7 @@ class motorct
       wn[i][0]=0;
       wn[i][1]=0;
     }
-    dirc(wn);
+    dirc();
   }
   void clockcome()
   {
