@@ -73,4 +73,50 @@ class pathfind:public sensorct
     return digitalRead(signin);
   }
 };
+
+class compass:public sensorct
+{
+  private:
+  double aimdir;
+  int writesign()
+  {
+    
+  }
+  int readsign()
+  {
+    
+  }
+  public:
+  compass()
+  {
+    Serial2.begin(9600);
+    aimdir=detective();
+  }
+  ~compass()
+  {
+    
+  }
+  double detective()
+  {
+    Serial2.write(0x31);
+    String info="";
+      while(Serial2.available()||info.length()==0)
+    {
+      char temp;
+      temp=char(Serial2.read());
+      if((temp>='0'&&temp<='9')||temp=='.')
+      info+=temp;
+      delay(2);
+    }
+    return info.toDouble();
+  }
+  void updatedir(double newdir)
+  {
+    aimdir=newdir;
+  }
+  double getdir()
+  {
+    return aimdir;
+  }
+};
 #endif // SENSORCT_H_INCLUDE

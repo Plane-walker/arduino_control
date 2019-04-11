@@ -1,11 +1,9 @@
 #ifndef SERVOCT_H_INCLUDE
 #define SERVOCT_H_INCLUDE
-#include<SoftwareSerial.h>
 #include"sensorct.h"
 class servoct
 {
   private:
-  SoftwareSerial *sserial;
   int *pos;
   int *originpos;
   int *posc;
@@ -22,6 +20,11 @@ class servoct
     double de2=calcde(subline,r1,r2);
     double de3=180-(calcde(r1,subline,r2)+calcde(abs(carh-aimh-handl),dispath,subline));
     double de1=calcde(r2,subline,r1)+calcde(dispath,abs(carh-aimh-handl),subline);
+    if(!(de1==de1&&de2==de2&&de3==de3))
+    {
+      Serial3.println("CantReach");
+      return;
+    }
     posc[2]=(int)((de1-orde[0])/180*2000);
     orde[0]=de1;
     changepos(2);
@@ -31,13 +34,15 @@ class servoct
     posc[4]=(int)((-de3+orde[2])/180*2000);
     orde[2]=de3;
     changepos(4);
+    #ifdef DEBUG
     String out="";
     out.concat(de1);
     out+=" ";
     out.concat(de2);
     out+=" ";
     out.concat(de3);
-    Serial.println(out);
+    Serial3.println(out);
+    #endif
   }
   void changepos(int i)
   {
@@ -67,20 +72,17 @@ class servoct
       order+=" ";
       posc[i]=0;
     }
-    sserial->listen();
-    sserial->println(order);
+    Serial1.println(order);
     delay(2);
-    sserial->end();
   }
   public:
   servoct(int o0,int o1,int o2,int o3,int o4)
   {
-    sserial=new SoftwareSerial(2,3);//RX,TX
-    sserial->begin(115200);
+    Serial1.begin(115200);
     handl=9.890;
     r1=14.640;
     r2=10.260;
-    carh=17.060;
+    carh=16.060;
     dispath=9;
     aimh=10;
     orde=new double[3]{123.1,65.1,29.6};
@@ -90,7 +92,6 @@ class servoct
   }
   ~servoct()
   {
-    delete sserial;
     delete[] originpos;
     delete[] pos;
     delete[] posc;
@@ -110,7 +111,7 @@ class servoct
   void pushahead(ultrasonic &ultr,double distance,double ah)
   {
     aimh=ah;
-    if(distance<1)
+    if(distance<7)
     dispath=ultr.detective()+10.980;
     else
     dispath=distance+10.980;

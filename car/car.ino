@@ -7,12 +7,13 @@
 #define RELEASE
 
 servoct servos(1400,1000,1800,2100,2500);
-motorct motors(0.6);
-pathfind track[3]={pathfind(8),pathfind(7),pathfind(18)};
-ultrasonic ultr(4,19);//echo,t
+motorct motors;
+pathfind track[5]={pathfind(4),pathfind(5),pathfind(18),pathfind(4),pathfind(5)};
+ultrasonic ultr(34,35);//echo,t
+compass comp;
 automode atmode;
 String info="";
-
+int motorder=0;
 
 /*
  * encipher_list
@@ -43,7 +44,7 @@ String info="";
  * 24------pullahead
  * 25------pullback
  * 26------null
- * 27------null
+ * 27------detectde
  * 28------detectdis
 */
 
@@ -53,7 +54,8 @@ void infocheck(String info)
   order+=info[0];
   order+=info[1];
   int lspeed,rspeed;
-  int aimh,distance;
+  int aimh;
+  double distance;
   int spec;
   if(order.toInt()<21)
   {
@@ -73,13 +75,15 @@ void infocheck(String info)
           }
           if(order=="11")
           return;
+          if(order.toInt()>=0&&order.toInt()<=10)
+          motorder=order.toInt();
   }
   if(order.toInt()==24)
   {
     String temp="";
     for(int i=2;i<4;i++)
     temp+=info[i];
-    distance=temp.toInt();
+    distance=static_cast<double>(temp.toInt());
     temp="";
     for(int i=4;i<6;i++)
     temp+=info[i];
@@ -132,32 +136,32 @@ void infocheck(String info)
         break;
         case 3:
         {
-          motors.goleft(spec);
+          motors.gonewdir(comp,-90);
         }
         break;
         case 4:
         {
-          motors.goright(spec);
+          motors.gonewdir(comp,90);
         }
         break;
         case 5:
         {
-          motors.goAR(spec);
+          motors.gonewdir(comp,45);
         }
         break;
         case 6:
         {
-          motors.goAL(spec);
+          motors.gonewdir(comp,-45);
         }
         break;
         case 8:
         {
-          motors.goBR(spec);
+          motors.gonewdir(comp,135);
         }
         break;
         case 7:
         {
-          motors.goBL(spec);
+          motors.gonewdir(comp,-135);
         }
         break;
         case 0:
@@ -178,7 +182,12 @@ void infocheck(String info)
 //----------------------------------------------------------------
         case 28:
        {
-        Serial.println(ultr.detective());
+        Serial3.println(ultr.detective());
+       }
+       break;
+       case 27:
+       {
+        Serial3.println(comp.detective());
        }
        break;
        }
@@ -187,23 +196,39 @@ void infocheck(String info)
 
 void setup() 
 {
-  Serial.begin(9600);
+  Serial3.begin(9600);
 }
 
 void loop() 
 {
-  while(Serial.available())
+  while(Serial3.available())
     {
-      info+=char(Serial.read());
+      info+=char(Serial3.read());
       delay(2);
     }
-    if(!Serial.available()&&info.length()>1)
-    {
-      motors.closeclock();
+    if(!Serial3.available()&&info.length()>1)
       infocheck(info);
-    }
     info="";
-    motors.clockcome();
+    double fixrg=comp.detective()-comp.getdir();
+    if(fixrg<-180)
+    fixrg+=360;
+    if(fixrg>180)
+    fixrg-=360;
+    if(motorder!=02)
+    {
+      if(fixrg>5)
+      {
+        motors.turnR();
+      }
+      else if(fixrg<-5)
+      {
+        motors.turnL();
+      }
+      else
+      {
+        motors.goahead();
+      }
+    }
     if(atmode.ab())
     {
       if(!atmode.autop())

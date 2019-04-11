@@ -5,7 +5,8 @@
 #include"motorct.h"
 class automode
 {
-  double P,I,D,error,last_error,previous_error;
+  double P,I,D,last_error,previous_error;
+  int error;
   double Kp,Ki,Kd;
   long timecheck;
   bool auto_p;
@@ -28,24 +29,34 @@ class automode
     int trackn[3]={};
     for(int i=0;i<3;i++)
       trackn[i]=pf[i].readsign();
-      if(trackn[0]==0&&trackn[1]==1&&trackn[2]==0)
+      if(trackn[0]==0&&trackn[1]==0&&trackn[2]==1&&trackn[3]==0&&trackn[4]==0)
       {
         error=0;
         timecheck=0;
       }
-      else if(trackn[0]==1&&trackn[1]==0&&trackn[2]==0)
+      else if(trackn[4]==1)
       {
-        error=-1;
+        error=2;
         timecheck=0;
       }
-      else if(trackn[0]==0&&trackn[1]==0&&trackn[2]==1)
+      else if(trackn[0]==1)
+      {
+        error=-2;
+        timecheck=0;
+      }
+      else if(trackn[3]==1)
       {
         error=1;
         timecheck=0;
       }
-      else if(trackn[0]==0&&trackn[1]==0&&trackn[2]==0)
+      else if(trackn[1]==1)
       {
-        if(timecheck==0)
+        error=-1;
+        timecheck=0;
+      }
+      else if(trackn[3]==0)
+      {
+        if(timecheck==0&&trackn[0]==0&&trackn[1]==0&&trackn[2]==1&&trackn[3]==0&&trackn[4]==0)
         timecheck=millis();
         else if(millis()-timecheck>=timeset)
         {
@@ -113,12 +124,39 @@ void autowork_s(pathfind *pf,motorct &motors)
   return;
 }
   errorupdate(pf);
-  if(error==0)
-  motors.goahead();
-  else if(error==-1)
-  motors.turnL();
-  else if(error==1)
-  motors.turnR();
+  switch(error)
+  {
+    case 0:
+    {
+      motors.writespeed(128,128);
+      motors.goahead();
+    }
+    break;
+    case 1:
+    {
+      motors.writespeed(128,128);
+      motors.turnR();
+    }
+    break;
+    case -1:
+    {
+      motors.writespeed(128,128);
+      motors.turnL();
+    }
+    break;
+    case 2:
+    {
+      motors.writespeed(255,255);
+      motors.turnR();
+    }
+    break;
+    case -2:
+    {
+      motors.writespeed(255,255);
+      motors.turnL();
+    }
+    break;
+  }
 }
   void auto_pick(ultrasonic &ultr,servoct &servos)
   {

@@ -7,10 +7,6 @@ class motorct
   int (*wheel)[2];
   int (*wn)[2];
   int *EN;
-  bool clocked;
-  unsigned long timedelay;
-  long turntime;
-  double dek;
   void setwheelpin()
   {
     for(int i=0;i<4;i++)
@@ -25,17 +21,11 @@ class motorct
     for(int j=0;j<2;j++)
       digitalWrite(wheel[i][j],wn[i][j]);
   }
-  void timecost(double de)
-  {
-    double n=(double)lspeed/255.0*500.0;
-    timedelay=2500*de/(13*3.14*dek*n)*1000;
-    turntime=millis();
-  }
   public:
-  motorct(double dek=0.6):dek(dek)
+  motorct()
   {
     wheel=new int[4][2];
-    int temp1[4][2]={14,15,12,11,16,17,10,9};
+    int temp1[4][2]={52,53,30,31,50,51,32,33};
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
     wheel[i][j]=temp1[i][j];
@@ -44,8 +34,7 @@ class motorct
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
     wn[i][j]=temp2[i][j];
-    EN=new int[2]{5,6};
-    clocked=false;
+    EN=new int[2]{2,3};
     lspeed=128;
     rspeed=128;
     setwheelpin();
@@ -77,119 +66,72 @@ class motorct
        }
        dirc();
   }
-  void goleft(int spec)
+  void gonewdir(compass& comp,double dirchange)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/2;
-      timecost(sde);
-      turnL();
-    }
+    double newdir=comp.getdir()+dirchange;
+    if(newdir<0)
+    newdir+=360;
+    else if(newdir>360)
+    newdir-=360;
+    comp.updatedir(newdir);
+    if(dirchange<0)
+    turnL();
     else
-    {
+    turnR();
+  }
+  void goleft(compass & comp)
+  {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=(i==1||i==2);
       wn[i][1]=!wn[i][0];
       }
       dirc();
-    }
   }
-  void goright(int spec)
+  void goright(compass & comp)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/2;
-      timecost(sde);
-      turnR();
-    }
-    else
-    {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=(i==0||i==3);
       wn[i][1]=!wn[i][0];
       }
       dirc();
-    }
   }
-  void goAL(int spec)
+  void goAL(compass & comp)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/4;
-      timecost(sde);
-      turnL();
-    }
-    else
-    {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=(i==1||i==2);
       wn[i][1]=0;
       }
       dirc();
-    }
   }
-  void goAR(int spec)
+  void goAR(compass & comp)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/4;
-      timecost(sde);
-      turnR();
-    }
-    else
-    {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=(i==0||i==3);
       wn[i][1]=0;
       }
       dirc();
-    }
   }
-  void goBL(int spec)
+  void goBL(compass & comp)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/4*3;
-      timecost(sde);
-      turnL();
-    }
-    else
-    {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=0;
       wn[i][1]=(i==0||i==3);
       }
       dirc();
-    }
   }
-  void goBR(int spec)
+  void goBR(compass & comp)
   {
-    if(spec==0)
-    {
-      clocked=true;
-      double sde=3.14/4*3;
-      timecost(sde);
-      turnR();
-    }
-    else
-    {
       for(int i=0;i<4;i++)
       {
       wn[i][0]=0;
       wn[i][1]=(i==1||i==2);
       }
       dirc();
-    }
   }
   void turnL()
   {
@@ -217,18 +159,6 @@ class motorct
       wn[i][1]=0;
     }
     dirc();
-  }
-  void clockcome()
-  {
-    if(clocked&&(millis()-turntime)>=timedelay)
-    {
-      clocked=false;
-      goahead();
-    }
-  }
-  void closeclock()
-  {
-    clocked=false;
   }
   void writespeed(int ls,int rs)
   {
