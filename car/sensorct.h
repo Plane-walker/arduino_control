@@ -90,7 +90,6 @@ class compass:public sensorct
   compass()
   {
     Serial2.begin(9600);
-    aimdir=detective();
   }
   ~compass()
   {

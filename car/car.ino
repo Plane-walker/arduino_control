@@ -8,12 +8,11 @@
 
 servoct servos(1400,1000,1800,2100,2500);
 motorct motors;
-pathfind track[5]={pathfind(4),pathfind(5),pathfind(18),pathfind(4),pathfind(5)};
+pathfind track[5]={pathfind(37),pathfind(38),pathfind(39),pathfind(40),pathfind(41)};
 ultrasonic ultr(34,35);//echo,t
 compass comp;
 automode atmode;
 String info="";
-int motorder=0;
 
 /*
  * encipher_list
@@ -76,7 +75,7 @@ void infocheck(String info)
           if(order=="11")
           return;
           if(order.toInt()>=0&&order.toInt()<=10)
-          motorder=order.toInt();
+          motors.changemor(order.toInt());
   }
   if(order.toInt()==24)
   {
@@ -126,11 +125,13 @@ void infocheck(String info)
 //wheelcontrol
         case 1:
         {
+          comp.updatedir(comp.detective());
           motors.goahead();
         }
         break;
         case 2:
         {
+          comp.updatedir(comp.detective());
           motors.goback();
         }
         break;
@@ -171,12 +172,12 @@ void infocheck(String info)
         break;
         case 9:
         {
-          motors.turnL();
+          motors.gonewdir(comp,-180);
         }
         break;
         case 10:
         {
-          motors.turnR();
+          motors.gonewdir(comp,180);
         }
         break;
 //----------------------------------------------------------------
@@ -196,7 +197,11 @@ void infocheck(String info)
 
 void setup() 
 {
+  #ifdef DEBUG
+  Serial.begin(9600);
+  #endif
   Serial3.begin(9600);
+  comp.updatedir(comp.detective());
 }
 
 void loop() 
@@ -209,24 +214,29 @@ void loop()
     if(!Serial3.available()&&info.length()>1)
       infocheck(info);
     info="";
-    double fixrg=comp.detective()-comp.getdir();
-    if(fixrg<-180)
-    fixrg+=360;
-    if(fixrg>180)
-    fixrg-=360;
-    if(motorder!=02)
+    if(motor.getmor()!=0)
     {
-      if(fixrg>5)
+      double fixrg=comp.getdir()-comp.detective();
+      if(fixrg<-180)
+      fixrg+=360;
+      if(fixrg>180)
+      fixrg-=360;
+      if((fixrg>3&&motors.getmor()!=9&&motors.getmor()!=10)||(abs(fixrg)>3&&motors.getmor()==10))
       {
         motors.turnR();
       }
-      else if(fixrg<-5)
+      else if((fixrg<-3&&motors.getmor()!=9&&motors.getmor()!=10)||(abs(fixrg)>3&&motors.getmor()==9))
       {
         motors.turnL();
+      }
+      else if(motors.getmor()==2)
+      {
+        motors.goback();
       }
       else
       {
         motors.goahead();
+        motors.changemor(1);
       }
     }
     if(atmode.ab())

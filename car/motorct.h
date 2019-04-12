@@ -1,8 +1,10 @@
 #ifndef MOTORCT_H_INCLUDE
 #define MOTORCT_H_INCLUDE
+#include"sensorct.h"
 class motorct
 {
   private:
+  int motorder;
   int lspeed,rspeed;
   int (*wheel)[2];
   int (*wn)[2];
@@ -37,6 +39,7 @@ class motorct
     EN=new int[2]{2,3};
     lspeed=128;
     rspeed=128;
+    modorder=0;
     setwheelpin();
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
@@ -74,10 +77,6 @@ class motorct
     else if(newdir>360)
     newdir-=360;
     comp.updatedir(newdir);
-    if(dirchange<0)
-    turnL();
-    else
-    turnR();
   }
   void goleft(compass & comp)
   {
@@ -182,6 +181,14 @@ class motorct
   int readrspeed()
   {
     return rspeed;
+  }
+  void changemor(int or)
+  {
+    motorder=or;
+  }
+  int getmor()
+  {
+    return motorder;
   }
 };
 #endif // MOTORCT_H_INCLUDE
