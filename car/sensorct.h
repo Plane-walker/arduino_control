@@ -109,6 +109,14 @@ class compass:public sensorct
     }
     return info.toDouble();
   }
+  void befix()
+  {
+    Serial2.write(0xC0);
+  }
+  void endfix()
+  {
+    Serial2.write(0xC1);
+  }
   void updatedir(double newdir)
   {
     aimdir=newdir;

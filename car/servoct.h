@@ -79,12 +79,12 @@ class servoct
   servoct(int o0,int o1,int o2,int o3,int o4)
   {
     Serial1.begin(115200);
-    handl=9.890;
+    handl=12.420;//9.890;
     r1=14.640;
     r2=10.260;
     carh=16.060;
-    dispath=9;
-    aimh=10;
+    dispath=10;
+    aimh=12;
     orde=new double[3]{123.1,65.1,29.6};
     originpos=new int[5]{o0,o1,o2,o3,o4};
     pos=new int[5]{o0,o1,o2,o3,o4};

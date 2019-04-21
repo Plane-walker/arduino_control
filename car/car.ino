@@ -8,7 +8,7 @@
 
 servoct servos(1400,1000,1800,2100,2500);
 motorct motors;
-pathfind track[5]={pathfind(37),pathfind(38),pathfind(39),pathfind(40),pathfind(41)};
+pathfind track[5]={pathfind(36),pathfind(37),pathfind(38),pathfind(41),pathfind(40)};
 ultrasonic ultr(34,35);//echo,t
 compass comp;
 automode atmode;
@@ -43,8 +43,12 @@ String info="";
  * 24------pullahead
  * 25------pullback
  * 26------null
- * 27------detectde
+ * 27------detectdir
  * 28------detectdis
+ * 29------dirfixbegin
+ * 30------dirfixend
+ * 31------changepid
+ * 32------assistbutton
 */
 
 void infocheck(String info)
@@ -91,6 +95,10 @@ void infocheck(String info)
         if(order=="23")
         {
           atmode.changeab();
+          if(atmode.ab())
+          motors.goahead();
+          else
+          motors.hardstop();
         }
         else if(!atmode.ab())
         {
@@ -168,16 +176,17 @@ void infocheck(String info)
         case 0:
         {
           motors.hardstop();
+          comp.updatedir(comp.detective());
         }
         break;
         case 9:
         {
-          motors.gonewdir(comp,-180);
+          motors.turnL();
         }
         break;
         case 10:
         {
-          motors.gonewdir(comp,180);
+          motors.turnR();
         }
         break;
 //----------------------------------------------------------------
@@ -189,6 +198,39 @@ void infocheck(String info)
        case 27:
        {
         Serial3.println(comp.detective());
+       }
+       break;
+       case 29:
+       {
+        comp.befix();
+       }
+       break;
+       case 30:
+       {
+        comp.endfix();
+       }
+       break;
+       case 31:
+       {
+        int P,I,D;
+        String temp="";
+        for(int i=2;i<5;i++)
+          temp+=info[i];
+          P=temp.toInt();
+          temp="";
+        for(int i=5;i<8;i++)
+          temp+=info[i];
+          I=temp.toInt();
+          temp="";
+        for(int i=8;i<11;i++)
+          temp+=info[i];
+          D=temp.toInt();
+        motors.changepid(P,I,D);
+       }
+       break;
+       case 32:
+       {
+        motors.changeassist();
        }
        break;
        }
@@ -214,31 +256,8 @@ void loop()
     if(!Serial3.available()&&info.length()>1)
       infocheck(info);
     info="";
-    if(motor.getmor()!=0)
-    {
-      double fixrg=comp.getdir()-comp.detective();
-      if(fixrg<-180)
-      fixrg+=360;
-      if(fixrg>180)
-      fixrg-=360;
-      if((fixrg>3&&motors.getmor()!=9&&motors.getmor()!=10)||(abs(fixrg)>3&&motors.getmor()==10))
-      {
-        motors.turnR();
-      }
-      else if((fixrg<-3&&motors.getmor()!=9&&motors.getmor()!=10)||(abs(fixrg)>3&&motors.getmor()==9))
-      {
-        motors.turnL();
-      }
-      else if(motors.getmor()==2)
-      {
-        motors.goback();
-      }
-      else
-      {
-        motors.goahead();
-        motors.changemor(1);
-      }
-    }
+    if(!atmode.ab())
+    motors.autofixdir(comp);
     if(atmode.ab())
     {
       if(!atmode.autop())

@@ -5,16 +5,16 @@
 #include"motorct.h"
 class automode
 {
-  double P,I,D,last_error,previous_error;
+  /*double P,I,D,last_error,previous_error;
+  double Kp,Ki,Kd;*/
   int error;
-  double Kp,Ki,Kd;
   long timecheck;
   bool auto_p;
   bool stopcar;
   unsigned long timeset;
   int disset;
   bool auto_begin;
-  int calc_pid()
+  /*int calc_pid()
   {
     P=Kp*(error-last_error);
     I=Ki*error;
@@ -23,40 +23,40 @@ class automode
     last_error=error;
     previous_error=last_error;
     return (int)PID_value;
-  }
+  }*/
   void errorupdate(pathfind *pf)
   {
-    int trackn[3]={};
-    for(int i=0;i<3;i++)
+    int trackn[5]={};
+    for(int i=0;i<5;i++)
       trackn[i]=pf[i].readsign();
       if(trackn[0]==0&&trackn[1]==0&&trackn[2]==1&&trackn[3]==0&&trackn[4]==0)
       {
         error=0;
         timecheck=0;
       }
-      else if(trackn[4]==1)
+      else if(trackn[0]==1)
       {
         error=2;
         timecheck=0;
       }
-      else if(trackn[0]==1)
+      else if(trackn[4]==1)
       {
         error=-2;
         timecheck=0;
       }
-      else if(trackn[3]==1)
+      else if(trackn[1]==1)
       {
         error=1;
         timecheck=0;
       }
-      else if(trackn[1]==1)
+      else if(trackn[3]==1)
       {
         error=-1;
         timecheck=0;
       }
-      else if(trackn[3]==0)
+      else
       {
-        if(timecheck==0&&trackn[0]==0&&trackn[1]==0&&trackn[2]==1&&trackn[3]==0&&trackn[4]==0)
+        if(timecheck==0)  
         timecheck=millis();
         else if(millis()-timecheck>=timeset)
         {
@@ -68,7 +68,7 @@ class automode
   public:
   automode()
   {
-    P=0;
+    /*P=0;
     I=0;
     D=0;
     error=0;
@@ -76,7 +76,8 @@ class automode
     last_error=0;
     Kp=50;
     Ki=0;
-    Kd=0;
+    Kd=0;*/
+    error=0;
     timecheck=0;
     auto_p=false;
     timeset=1500;
@@ -88,7 +89,7 @@ class automode
   {
     
   }
-  void autowork(pathfind *pf,motorct &motors)
+  /*void autowork(pathfind *pf,motorct &motors)
 {
   if(stopcar)
 {
@@ -115,7 +116,7 @@ class automode
   if(Rspeed<-255)
   Rspeed=-255;
   motors.writespeed(abs(Lspeed),abs(Rspeed));
-}
+}*/
 void autowork_s(pathfind *pf,motorct &motors)
 {
   if(stopcar)
@@ -157,6 +158,7 @@ void autowork_s(pathfind *pf,motorct &motors)
     }
     break;
   }
+  //Serial3.println(error);
 }
   void auto_pick(ultrasonic &ultr,servoct &servos)
   {
@@ -187,11 +189,11 @@ void autowork_s(pathfind *pf,motorct &motors)
     stopcar=false;
     error=0;
   }
-    void changepid(int P,int I,int D)
+    /*void changepid(int P,int I,int D)
   {
     Kp=P;
     Ki=I;
     Kd=D;
-  }
+  }*/
 };
 #endif // AUTOMODE_H_INCLUDE

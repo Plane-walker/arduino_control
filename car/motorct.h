@@ -1,4 +1,4 @@
-#ifndef MOTORCT_H_INCLUDE
+  #ifndef MOTORCT_H_INCLUDE
 #define MOTORCT_H_INCLUDE
 #include"sensorct.h"
 class motorct
@@ -9,6 +9,11 @@ class motorct
   int (*wheel)[2];
   int (*wn)[2];
   int *EN;
+  
+  double P,I,D,error,last_error,previous_error;
+  double Kp,Ki,Kd;
+  bool stassist;
+  
   void setwheelpin()
   {
     for(int i=0;i<4;i++)
@@ -22,6 +27,16 @@ class motorct
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
       digitalWrite(wheel[i][j],wn[i][j]);
+  }
+  int calc_pid()
+  {
+    P=Kp*(error-last_error);
+    I=Ki*error;
+    D=Kd*(error-last_error*2+previous_error);
+    double PID_value =P+I+D;
+    last_error=error;
+    previous_error=last_error;
+    return (int)PID_value;
   }
   public:
   motorct()
@@ -39,11 +54,22 @@ class motorct
     EN=new int[2]{2,3};
     lspeed=128;
     rspeed=128;
-    modorder=0;
+    motorder=0;
     setwheelpin();
     for(int i=0;i<4;i++)
     for(int j=0;j<2;j++)
     digitalWrite(wheel[i][j],0);
+
+    P=0;
+    I=0;
+    D=0;
+    error=0;
+    previous_error=0;
+    last_error=0;
+    Kp=200;
+    Ki=20;
+    Kd=100;
+    stassist=true;
   }
   ~motorct()
   {
@@ -78,7 +104,7 @@ class motorct
     newdir-=360;
     comp.updatedir(newdir);
   }
-  void goleft(compass & comp)
+  /*void goleft(compass & comp)
   {
       for(int i=0;i<4;i++)
       {
@@ -131,7 +157,7 @@ class motorct
       wn[i][1]=(i==1||i==2);
       }
       dirc();
-  }
+  }*/
   void turnL()
   {
     for(int i=0;i<4;i++)
@@ -182,13 +208,82 @@ class motorct
   {
     return rspeed;
   }
-  void changemor(int or)
+  void changemor(int ord)
   {
-    motorder=or;
+    motorder=ord;
   }
   int getmor()
   {
     return motorder;
+  }
+  void autofixdir(compass &comp)
+  {
+    if(getmor()!=0&&getmor()!=9&&getmor()!=10)
+    {
+      error=comp.getdir()-comp.detective();
+      if(error<-180)
+      error+=360;
+      if(error>180)
+      error-=360;
+      if((getmor()==1||getmor()==2))
+      {
+      if(assist())
+      {
+      int fixnum=calc_pid();
+      int Lspeed,Rspeed;
+      if(getmor()==1)
+      {
+        Lspeed=readlspeed()+(int)fixnum;
+        Rspeed=readrspeed()-(int)fixnum;
+        goahead();
+      }
+      else
+      {
+        Lspeed=readlspeed()-(int)fixnum;
+        Rspeed=readrspeed()+(int)fixnum;
+        goback();
+      }
+      if(Lspeed<0)
+        Lspeed=0;
+      if(Rspeed<0)
+        Rspeed=0;
+      if(Lspeed>255)
+        Lspeed=255;
+      if(Rspeed>255)
+        Rspeed=255;
+      writespeed(abs(Lspeed),abs(Rspeed));
+      }
+      }
+      else
+      {
+        if(error>5)
+        turnR();
+        else if(error<-5)
+        turnL();
+        else
+        {
+          goahead();
+          changemor(1);
+        }
+      }
+    }
+  }
+   void changepid(int P,int I,int D)
+  {
+    Kp=P;
+    Ki=I;
+    Kd=D;
+    error=0;
+    last_error=0;
+    previous_error=0;
+  }
+  bool assist()
+  {
+    return stassist;
+  }
+  void changeassist()
+  {
+    stassist=!stassist;
   }
 };
 #endif // MOTORCT_H_INCLUDE
